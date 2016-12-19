@@ -167,16 +167,31 @@ func main() {
 			// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
 			hashType := "6"
 			itemHashString := fmt.Sprint(itemHash)
-			hashReqUrl := bnetBaseUrl + "Manifest/" + hashType + "/" + itemHashString
-			fmt.Println(hashReqUrl)
+			hashReqUrl := bnetBaseUrl + "Manifest/" + hashType + "/" + itemHashString + "/"
 
 			itemData := exposeJson(hashReqUrl, apiKey)
 			idQuery := jsonq.NewQuery(itemData)
 
-			itemName, _ := idQuery.String("Response", "data", "inventoryItem", "itemName")
-			itemType, _ := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
-			itemTier, _ := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
-			itemIcon, _ := idQuery.String("Response", "data", "inventoryItem", "icon")
+			itemName, err := idQuery.String("Response", "data", "inventoryItem", "itemName")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			itemType, err := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			itemTier, err := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			itemIcon, err := idQuery.String("Response", "data", "inventoryItem", "icon")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
 			item := Item{
 				Name: itemName,
