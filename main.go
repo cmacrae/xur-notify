@@ -19,7 +19,6 @@ const bnetBaseUrl = "https://www.bungie.net/Platform/Destiny/"
 const invTemplate = `<u><b>{{.Category}}</b></u>
 {{range .Items}}{{.Name}}
 {{end}}
-
 `
 
 type Item struct {
