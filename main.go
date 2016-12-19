@@ -1,19 +1,26 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/bdenning/go-pushover"
+	"github.com/gregdel/pushover"
 	"github.com/jmoiron/jsonq"
 )
 
 const bnetBaseUrl = "https://www.bungie.net/Platform/Destiny/"
+const invTemplate = `<u><b>{{.Category}}</b></u>
+{{range .Items}}{{.Name}}
+{{end}}
+
+`
 
 type Item struct {
 	Name string
@@ -99,9 +106,22 @@ func exposeJsonFromFile(file string) map[string]interface{} {
 	return data
 }
 
-func notify(token string, user string, message string) {
-	msg := pushover.NewMessage(token, user)
-	msg.Push(message)
+// Send a push notification using Pushover with the contents of Xûr's inventory
+func notify(t string, u string, m string) {
+	message := &pushover.Message{
+		Title:     "Xûr's in town!",
+		Message:   m,
+		Timestamp: time.Now().Unix(),
+		HTML:      true,
+	}
+	app := pushover.New(t)
+	recipient := pushover.NewRecipient(u)
+	response, err := app.SendMessage(message, recipient)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("Pushover Response:\n%v\n", response)
 }
 
 func main() {
@@ -137,6 +157,9 @@ func main() {
 		panic(err)
 	}
 
+	// A buffer to collect generated content
+	var content bytes.Buffer
+
 	// Iterate over the array of objects in 'saleItemCategories' and perform queries using returned properties
 	for i := 0; i < len(saleItemCategories); i++ {
 		sicQuery := jsonq.NewQuery(saleItemCategories[i])
@@ -146,66 +169,84 @@ func main() {
 			os.Exit(1)
 		}
 
-		saleItems, err := sicQuery.ArrayOfObjects("saleItems")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		inv := Inventory{
-			Category: categoryTitle,
-		}
-
-		for i := 0; i < len(saleItems); i++ {
-			siQuery := jsonq.NewQuery(saleItems[i])
-			itemHash, err := siQuery.Int("item", "itemHash")
+		// Just run for dynamic items - no use getting notifications about static stock!
+		if categoryTitle == "Exotic Gear" || categoryTitle == "Weapon Ornaments" {
+			saleItems, err := sicQuery.ArrayOfObjects("saleItems")
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 
-			// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
-			hashType := "6"
-			itemHashString := fmt.Sprint(itemHash)
-			hashReqUrl := bnetBaseUrl + "Manifest/" + hashType + "/" + itemHashString + "/"
+			inv := Inventory{
+				Category: categoryTitle,
+			}
 
-			itemData := exposeJson(hashReqUrl, apiKey)
-			idQuery := jsonq.NewQuery(itemData)
+			for i := 0; i < len(saleItems); i++ {
+				siQuery := jsonq.NewQuery(saleItems[i])
+				itemHash, err := siQuery.Int("item", "itemHash")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 
-			itemName, err := idQuery.String("Response", "data", "inventoryItem", "itemName")
+				// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
+				hashType := "6"
+				itemHashString := fmt.Sprint(itemHash)
+				hashReqUrl := bnetBaseUrl + "Manifest/" + hashType + "/" + itemHashString + "/"
+
+				itemData := exposeJson(hashReqUrl, apiKey)
+				idQuery := jsonq.NewQuery(itemData)
+
+				itemName, err := idQuery.String("Response", "data", "inventoryItem", "itemName")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				itemType, err := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				itemTier, err := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				itemIcon, err := idQuery.String("Response", "data", "inventoryItem", "icon")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				item := Item{
+					Name: itemName,
+					Tier: itemTier,
+					Type: itemType,
+					Icon: itemIcon,
+				}
+
+				inv.Items = append(inv.Items, item)
+			}
+
+			t := template.Must(template.New(inv.Category).Parse(invTemplate))
+			err = t.Execute(&content, inv)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			itemType, err := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			itemTier, err := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			itemIcon, err := idQuery.String("Response", "data", "inventoryItem", "icon")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			item := Item{
-				Name: itemName,
-				Tier: itemTier,
-				Type: itemType,
-				Icon: itemIcon,
-			}
-
-			inv.Items = append(inv.Items, item)
-		}
-
-		fmt.Printf("*%v*\n", inv.Category)
-		for _, v := range inv.Items {
-			fmt.Printf("%v - %v - %v\n", v.Name, v.Type, v.Tier)
 		}
 	}
+
+	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
+	if pushoverToken == "" {
+		fmt.Println("The PUSHOVER_TOKEN environment variable is empty!")
+		os.Exit(1)
+	}
+	pushoverUserKey := os.Getenv("PUSHOVER_USER_KEY")
+	if pushoverUserKey == "" {
+		fmt.Println("The PUSHOVER_USER_KEY environment variable is empty!")
+		os.Exit(1)
+	}
+
+	notify(pushoverToken, pushoverUserKey, content.String())
 }
