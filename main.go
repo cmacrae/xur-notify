@@ -28,18 +28,23 @@ type Inventory struct {
 }
 
 // Perform an HTTP GET request on the given URL (1st param), using the given API key
-// (2nd param) as the value of the header 'X-API-Key' and return the body
-func getJson(url string, key string) []byte {
-	req, err := http.NewRequest("GET", url, nil)
+// (2nd param) as the value of the header 'X-API-Key', using the given timeout (3rd param) and return the body
+func getJson(u string, key string, t int) []byte {
+	timeout := time.Duration(t) * time.Second
+	client := &http.Client{
+		Timeout: timeout,
+	}
+
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	req.Header.Set("x-api-key", key)
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Set("cache-control", "no-cache")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 
 	if err != nil {
 		fmt.Println(err)
@@ -70,7 +75,7 @@ func readJsonFromFile(file string) []byte {
 // into a map[string]interface{} object and return it.
 func exposeJson(url string, key string) map[string]interface{} {
 	data := map[string]interface{}{}
-	byt := getJson(url, key)
+	byt := getJson(url, key, 5)
 	if err := json.Unmarshal(byt, &data); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
