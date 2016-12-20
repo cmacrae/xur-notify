@@ -179,6 +179,41 @@ func itemLookup(inv inventory, a []map[string]interface{}, k string) inventory {
 	return inv
 }
 
+func generateInvTemplate(b bytes.Buffer, a []map[string]interface{}, k string) bytes.Buffer {
+	for i := 0; i < len(a); i++ {
+		sicQuery := jsonq.NewQuery(a[i])
+		categoryTitle, err := sicQuery.String("categoryTitle")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Just run for dynamic items - no use getting notifications about static stock!
+		if categoryTitle == "Exotic Gear" || categoryTitle == "Weapon Ornaments" {
+			saleItems, siErr := sicQuery.ArrayOfObjects("saleItems")
+			if siErr != nil {
+				fmt.Println(siErr)
+				os.Exit(1)
+			}
+
+			inv := inventory{
+				Category: categoryTitle,
+			}
+
+			inv = itemLookup(inv, saleItems, k)
+
+			t := template.Must(template.New(inv.Category).Parse(invTemplate))
+			err = t.Execute(&b, inv)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	return b
+}
+
 func main() {
 	t := time.Now()
 	today := int(t.Weekday())
@@ -215,37 +250,7 @@ func main() {
 	// A buffer to collect generated content
 	var content bytes.Buffer
 
-	// Iterate over the array of objects in 'saleItemCategories' and perform queries using returned properties
-	for i := 0; i < len(saleItemCategories); i++ {
-		sicQuery := jsonq.NewQuery(saleItemCategories[i])
-		categoryTitle, err := sicQuery.String("categoryTitle")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Just run for dynamic items - no use getting notifications about static stock!
-		if categoryTitle == "Exotic Gear" || categoryTitle == "Weapon Ornaments" {
-			saleItems, siErr := sicQuery.ArrayOfObjects("saleItems")
-			if siErr != nil {
-				fmt.Println(siErr)
-				os.Exit(1)
-			}
-
-			inv := inventory{
-				Category: categoryTitle,
-			}
-
-			inv = itemLookup(inv, saleItems, apiKey)
-
-			t := template.Must(template.New(inv.Category).Parse(invTemplate))
-			err = t.Execute(&content, inv)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
-	}
+	content = generateInvTemplate(content, saleItemCategories, apiKey)
 
 	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
 	if pushoverToken == "" {
