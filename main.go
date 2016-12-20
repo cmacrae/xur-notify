@@ -15,27 +15,27 @@ import (
 	"github.com/jmoiron/jsonq"
 )
 
-const bnetBaseUrl = "https://www.bungie.net/Platform/Destiny/"
+const bnetBaseURL = "https://www.bungie.net/Platform/Destiny/"
 const invTemplate = `<u><b>{{.Category}}</b></u>
 {{range .Items}}{{.Name}}
 {{end}}
 `
 
-type Item struct {
+type item struct {
 	Name string
 	Tier string
 	Type string
 	Icon string
 }
 
-type Inventory struct {
+type inventory struct {
 	Category string
-	Items    []Item
+	Items    []item
 }
 
 // Perform an HTTP GET request on the given URL (1st param), using the given API key
 // (2nd param) as the value of the header 'X-API-Key', using the given timeout (3rd param) and return the body
-func getJson(u string, key string, t int) []byte {
+func getJSON(u string, key string, t int) []byte {
 	timeout := time.Duration(t) * time.Second
 	client := &http.Client{
 		Timeout: timeout,
@@ -68,7 +68,7 @@ func getJson(u string, key string, t int) []byte {
 }
 
 // Read a file and return its raw contents in an array of byte
-func readJsonFromFile(file string) []byte {
+func readJSONFromFile(file string) []byte {
 	raw, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
@@ -77,31 +77,37 @@ func readJsonFromFile(file string) []byte {
 	return raw
 }
 
-// Unmarshal the json body returned from 'getJson' using the provided URL and API key
+// Unmarshal the json body returned from 'getJSON' using the provided URL and API key
 // into a map[string]interface{} object and return it.
-func exposeJson(url string, key string) map[string]interface{} {
+func exposeJSON(url string, key string) map[string]interface{} {
 	data := map[string]interface{}{}
-	byt := getJson(url, key, 5)
+	byt := getJSON(url, key, 5)
 	if err := json.Unmarshal(byt, &data); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	dec := json.NewDecoder(strings.NewReader(string(byt)))
-	dec.Decode(&data)
+	if decErr := dec.Decode(&data); decErr != nil {
+		fmt.Println(decErr)
+		os.Exit(1)
+	}
 	return data
 }
 
-// Unmarshal the json body returned from 'readJsonFromFile' into a map[string]interface{} object and return it.
-func exposeJsonFromFile(file string) map[string]interface{} {
+// Unmarshal the json body returned from 'readJSONFromFile' into a map[string]interface{} object and return it.
+func exposeJSONFromFile(file string) map[string]interface{} {
 	data := map[string]interface{}{}
-	byt := readJsonFromFile(file)
+	byt := readJSONFromFile(file)
 	if err := json.Unmarshal(byt, &data); err != nil {
 		panic(err)
 	}
 
 	dec := json.NewDecoder(strings.NewReader(string(byt)))
-	dec.Decode(&data)
+	if decErr := dec.Decode(&data); decErr != nil {
+		fmt.Println(decErr)
+		os.Exit(1)
+	}
 	return data
 }
 
@@ -170,20 +176,20 @@ func main() {
 
 		// Just run for dynamic items - no use getting notifications about static stock!
 		if categoryTitle == "Exotic Gear" || categoryTitle == "Weapon Ornaments" {
-			saleItems, err := sicQuery.ArrayOfObjects("saleItems")
-			if err != nil {
-				fmt.Println(err)
+			saleItems, siErr := sicQuery.ArrayOfObjects("saleItems")
+			if siErr != nil {
+				fmt.Println(siErr)
 				os.Exit(1)
 			}
 
-			inv := Inventory{
+			inv := inventory{
 				Category: categoryTitle,
 			}
 
 			for i := 0; i < len(saleItems); i++ {
 				siQuery := jsonq.NewQuery(saleItems[i])
-				itemHash, err := siQuery.Int("item", "itemHash")
-				if err != nil {
+				itemHash, siErr := siQuery.Int("item", "itemHash")
+				if siErr != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
@@ -191,40 +197,40 @@ func main() {
 				// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
 				hashType := "6"
 				itemHashString := fmt.Sprint(itemHash)
-				hashReqUrl := bnetBaseUrl + "Manifest/" + hashType + "/" + itemHashString + "/"
+				hashReqURL := bnetBaseURL + "Manifest/" + hashType + "/" + itemHashString + "/"
 
-				itemData := exposeJson(hashReqUrl, apiKey)
+				itemData := exposeJSON(hashReqURL, apiKey)
 				idQuery := jsonq.NewQuery(itemData)
 
-				itemName, err := idQuery.String("Response", "data", "inventoryItem", "itemName")
-				if err != nil {
-					fmt.Println(err)
+				itemName, itemNameErr := idQuery.String("Response", "data", "inventoryItem", "itemName")
+				if itemNameErr != nil {
+					fmt.Println(itemNameErr)
 					os.Exit(1)
 				}
-				itemType, err := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
-				if err != nil {
-					fmt.Println(err)
+				itemType, itemTypeErr := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
+				if itemTypeErr != nil {
+					fmt.Println(itemTypeErr)
 					os.Exit(1)
 				}
-				itemTier, err := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
-				if err != nil {
-					fmt.Println(err)
+				itemTier, itemTierErr := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
+				if itemTierErr != nil {
+					fmt.Println(itemTierErr)
 					os.Exit(1)
 				}
-				itemIcon, err := idQuery.String("Response", "data", "inventoryItem", "icon")
-				if err != nil {
-					fmt.Println(err)
+				itemIcon, itemIconErr := idQuery.String("Response", "data", "inventoryItem", "icon")
+				if itemIconErr != nil {
+					fmt.Println(itemIconErr)
 					os.Exit(1)
 				}
 
-				item := Item{
+				thisItem := item{
 					Name: itemName,
 					Tier: itemTier,
 					Type: itemType,
 					Icon: itemIcon,
 				}
 
-				inv.Items = append(inv.Items, item)
+				inv.Items = append(inv.Items, thisItem)
 			}
 
 			t := template.Must(template.New(inv.Category).Parse(invTemplate))
