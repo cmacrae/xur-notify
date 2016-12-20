@@ -145,15 +145,15 @@ func main() {
 
 	// Open a new JSON query on the data returned from Xûr's 'Advisors' endpoint
 	// FROM BNET
-	xurUrl := bnetBaseUrl + "Advisors/Xur/"
-	data := exposeJson(xurUrl, apiKey)
+	xurURL := bnetBaseURL + "Advisors/Xur/"
+	data := exposeJSON(xurURL, apiKey)
 	jq := jsonq.NewQuery(data)
 
 	// Open a new JSON query on the dummy data stored in ./dummy_response.json
 	// This is for testing purposes only. The contents of this file were produced
 	// from a past query to Xûr's 'Advisors' endpoint
 	// FROM FILE
-	//data := exposeJsonFromFile("dummy_response.json")
+	//data := exposeJSONFromFile("dummy_response.json")
 	//jq := jsonq.NewQuery(data)
 
 	// Pull the array of objects from $.response.data.saleItemCategories into a var to iterate over
