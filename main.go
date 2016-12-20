@@ -129,6 +129,56 @@ func notify(t string, u string, m string) {
 	fmt.Printf("Pushover Response:\n%v\n", response)
 }
 
+func itemLookup(inv inventory, a []map[string]interface{}, k string) inventory {
+	for i := 0; i < len(a); i++ {
+		siQuery := jsonq.NewQuery(a[i])
+		itemHash, siErr := siQuery.Int("item", "itemHash")
+		if siErr != nil {
+			fmt.Println(siErr)
+			os.Exit(1)
+		}
+
+		// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
+		hashType := "6"
+		itemHashString := fmt.Sprint(itemHash)
+		hashReqURL := bnetBaseURL + "Manifest/" + hashType + "/" + itemHashString + "/"
+
+		itemData := exposeJSON(hashReqURL, k)
+		idQuery := jsonq.NewQuery(itemData)
+
+		itemName, itemNameErr := idQuery.String("Response", "data", "inventoryItem", "itemName")
+		if itemNameErr != nil {
+			fmt.Println(itemNameErr)
+			os.Exit(1)
+		}
+		itemType, itemTypeErr := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
+		if itemTypeErr != nil {
+			fmt.Println(itemTypeErr)
+			os.Exit(1)
+		}
+		itemTier, itemTierErr := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
+		if itemTierErr != nil {
+			fmt.Println(itemTierErr)
+			os.Exit(1)
+		}
+		itemIcon, itemIconErr := idQuery.String("Response", "data", "inventoryItem", "icon")
+		if itemIconErr != nil {
+			fmt.Println(itemIconErr)
+			os.Exit(1)
+		}
+
+		thisItem := item{
+			Name: itemName,
+			Tier: itemTier,
+			Type: itemType,
+			Icon: itemIcon,
+		}
+
+		inv.Items = append(inv.Items, thisItem)
+	}
+	return inv
+}
+
 func main() {
 	t := time.Now()
 	today := int(t.Weekday())
@@ -186,52 +236,7 @@ func main() {
 				Category: categoryTitle,
 			}
 
-			for i := 0; i < len(saleItems); i++ {
-				siQuery := jsonq.NewQuery(saleItems[i])
-				itemHash, siErr := siQuery.Int("item", "itemHash")
-				if siErr != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				// http://bungienetplatform.wikia.com/wiki/DestinyDefinitionType
-				hashType := "6"
-				itemHashString := fmt.Sprint(itemHash)
-				hashReqURL := bnetBaseURL + "Manifest/" + hashType + "/" + itemHashString + "/"
-
-				itemData := exposeJSON(hashReqURL, apiKey)
-				idQuery := jsonq.NewQuery(itemData)
-
-				itemName, itemNameErr := idQuery.String("Response", "data", "inventoryItem", "itemName")
-				if itemNameErr != nil {
-					fmt.Println(itemNameErr)
-					os.Exit(1)
-				}
-				itemType, itemTypeErr := idQuery.String("Response", "data", "inventoryItem", "itemTypeName")
-				if itemTypeErr != nil {
-					fmt.Println(itemTypeErr)
-					os.Exit(1)
-				}
-				itemTier, itemTierErr := idQuery.String("Response", "data", "inventoryItem", "tierTypeName")
-				if itemTierErr != nil {
-					fmt.Println(itemTierErr)
-					os.Exit(1)
-				}
-				itemIcon, itemIconErr := idQuery.String("Response", "data", "inventoryItem", "icon")
-				if itemIconErr != nil {
-					fmt.Println(itemIconErr)
-					os.Exit(1)
-				}
-
-				thisItem := item{
-					Name: itemName,
-					Tier: itemTier,
-					Type: itemType,
-					Icon: itemIcon,
-				}
-
-				inv.Items = append(inv.Items, thisItem)
-			}
+			inv = itemLookup(inv, saleItems, apiKey)
 
 			t := template.Must(template.New(inv.Category).Parse(invTemplate))
 			err = t.Execute(&content, inv)
