@@ -123,9 +123,9 @@ func notify(t string, u string, h string, m string) {
 func itemLookup(inv inventory, a []map[string]interface{}, k string) inventory {
 	for i := 0; i < len(a); i++ {
 		siQuery := jsonq.NewQuery(a[i])
-		itemHash, siErr := siQuery.Int("item", "itemHash")
-		if siErr != nil {
-			fmt.Println(siErr)
+		itemHash, err := siQuery.Int("item", "itemHash")
+		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
