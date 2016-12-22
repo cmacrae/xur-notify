@@ -2,8 +2,7 @@
 // Use of this source code is governed by an MIT license
 // that can be found in the LICENSE file.
 
-// Get push notifications detailing what Xûr -- the mysterious travelling salesman
-// in Bungie's game: Destiny -- is selling.
+// Tests for 'github.com/cmacrae/xur-notify'
 package main
 
 import (
