@@ -79,16 +79,6 @@ func getJSON(u string, key string, t int) []byte {
 	return body
 }
 
-// readJSONFromFile reads a JSON formatted file and returns its raw contents in an array of byte
-func readJSONFromFile(file string) []byte {
-	raw, err := ioutil.ReadFile(file)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return raw
-}
-
 // exposeJSON unmarshals the json body returned from 'getJSON' using the given URL and API key
 // into a map[string]interface{} object and returns it.
 func exposeJSON(url string, key string) map[string]interface{} {
@@ -97,23 +87,6 @@ func exposeJSON(url string, key string) map[string]interface{} {
 	if err := json.Unmarshal(byt, &data); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-
-	dec := json.NewDecoder(strings.NewReader(string(byt)))
-	if decErr := dec.Decode(&data); decErr != nil {
-		fmt.Println(decErr)
-		os.Exit(1)
-	}
-	return data
-}
-
-// exposeJSONFromFile unmarshals the data returned from 'readJSONFromFile'
-// into a map[string]interface{} object and returns it.
-func exposeJSONFromFile(file string) map[string]interface{} {
-	data := map[string]interface{}{}
-	byt := readJSONFromFile(file)
-	if err := json.Unmarshal(byt, &data); err != nil {
-		panic(err)
 	}
 
 	dec := json.NewDecoder(strings.NewReader(string(byt)))
@@ -265,13 +238,6 @@ func main() {
 	xurURL := bnetBaseURL + "Advisors/Xur/"
 	data := exposeJSON(xurURL, apiKey)
 	jq := jsonq.NewQuery(data)
-
-	// Open a new JSON query on the dummy data stored in ./dummy_response.json
-	// This is for testing purposes only. The contents of this file were produced
-	// from a past query to Xûr's 'Advisors' endpoint
-	// FROM FILE
-	//data := exposeJSONFromFile("dummy_response.json")
-	//jq := jsonq.NewQuery(data)
 
 	// Pull the array of objects from $.response.data.saleItemCategories into a var to iterate over
 	saleItemCategories, err := jq.ArrayOfObjects("Response", "data", "saleItemCategories")
