@@ -1,3 +1,7 @@
+// Copyright 2016 Calum MacRae. All rights reserved.
+// Use of this source code is governed by an MIT license
+// that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -21,6 +25,7 @@ const invTemplate = `<u><b>{{.Category}}</b></u>
 {{end}}
 `
 
+// item is used for storing item information retrieved from the Bungie API.
 type item struct {
 	Name string
 	Tier string
@@ -28,13 +33,15 @@ type item struct {
 	Icon string
 }
 
+// inventory is used to store items categorically (determined by 'itemCategory').
 type inventory struct {
 	Category string
 	Items    []item
 }
 
-// Perform an HTTP GET request on the given URL (1st param), using the given API key
-// (2nd param) as the value of the header 'X-API-Key', using the given timeout (3rd param) and return the body
+// getJSON performs an HTTP GET request on the given URL, using the given API key
+// as the value of the header 'X-API-Key', whilst adhering to  the given timeout.
+// It returns the body in an array of byte.
 func getJSON(u string, key string, t int) []byte {
 	timeout := time.Duration(t) * time.Second
 	client := &http.Client{
@@ -72,7 +79,7 @@ func getJSON(u string, key string, t int) []byte {
 	return body
 }
 
-// Read a file and return its raw contents in an array of byte
+// readJSONFromFile reads a JSON formatted file and returns its raw contents in an array of byte
 func readJSONFromFile(file string) []byte {
 	raw, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -82,8 +89,8 @@ func readJSONFromFile(file string) []byte {
 	return raw
 }
 
-// Unmarshal the json body returned from 'getJSON' using the provided URL and API key
-// into a map[string]interface{} object and return it.
+// exposeJSON unmarshals the json body returned from 'getJSON' using the given URL and API key
+// into a map[string]interface{} object and returns it.
 func exposeJSON(url string, key string) map[string]interface{} {
 	data := map[string]interface{}{}
 	byt := getJSON(url, key, 5)
@@ -100,7 +107,8 @@ func exposeJSON(url string, key string) map[string]interface{} {
 	return data
 }
 
-// Unmarshal the json body returned from 'readJSONFromFile' into a map[string]interface{} object and return it.
+// exposeJSONFromFile unmarshals the data returned from 'readJSONFromFile'
+// into a map[string]interface{} object and returns it.
 func exposeJSONFromFile(file string) map[string]interface{} {
 	data := map[string]interface{}{}
 	byt := readJSONFromFile(file)
@@ -116,10 +124,11 @@ func exposeJSONFromFile(file string) map[string]interface{} {
 	return data
 }
 
-// Send a push notification using Pushover with the contents of Xûr's inventory
-func notify(t string, u string, m string) {
+// notify sends a push notification using Pushover, using the given application & user token, with
+// the value of the 1st given string as the message title, and the 2nd as the body.
+func notify(t string, u string, h string, m string) {
 	message := &pushover.Message{
-		Title:     "Xûr's in town!",
+		Title:     h,
 		Message:   m,
 		Timestamp: time.Now().Unix(),
 		HTML:      true,
@@ -134,6 +143,10 @@ func notify(t string, u string, m string) {
 	fmt.Printf("Pushover Response:\n%v\n", response)
 }
 
+// itemLookup performs an iteration of API queries over an array of maps against the Bungie API.
+// On each iteration, certain field data is stored into an item struct, which is then appended to
+// an array of items in the given inventory. Finally, the given inventory is returned, with its new
+// collection of items.
 func itemLookup(inv inventory, a []map[string]interface{}, k string) inventory {
 	for i := 0; i < len(a); i++ {
 		siQuery := jsonq.NewQuery(a[i])
@@ -184,6 +197,9 @@ func itemLookup(inv inventory, a []map[string]interface{}, k string) inventory {
 	return inv
 }
 
+// generateInvTemplate generates a text template from the given array of map, into the given bytes.Buffer,
+// which is then returned. It makes use of the 'itemLookup' function, so an API key should be provided as
+// the 3rd parameter.
 func generateInvTemplate(b bytes.Buffer, a []map[string]interface{}, k string) bytes.Buffer {
 	for i := 0; i < len(a); i++ {
 		sicQuery := jsonq.NewQuery(a[i])
@@ -220,11 +236,22 @@ func generateInvTemplate(b bytes.Buffer, a []map[string]interface{}, k string) b
 }
 
 func main() {
+	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
+	if pushoverToken == "" {
+		fmt.Println("The PUSHOVER_TOKEN environment variable is empty!")
+		os.Exit(1)
+	}
+	pushoverUserKey := os.Getenv("PUSHOVER_USER_KEY")
+	if pushoverUserKey == "" {
+		fmt.Println("The PUSHOVER_USER_KEY environment variable is empty!")
+		os.Exit(1)
+	}
+
 	t := time.Now()
 	today := int(t.Weekday())
-	if today < 4 {
-		fmt.Println("Xûr ain't here yet!")
-		os.Exit(1)
+	if today < 5 {
+		notify(pushoverToken, pushoverUserKey, "Xûr ain't here yet!", "Check your scheduling")
+		os.Exit(3)
 	}
 
 	apiKey := os.Getenv("BNET_API_KEY")
@@ -257,16 +284,5 @@ func main() {
 
 	content = generateInvTemplate(content, saleItemCategories, apiKey)
 
-	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
-	if pushoverToken == "" {
-		fmt.Println("The PUSHOVER_TOKEN environment variable is empty!")
-		os.Exit(1)
-	}
-	pushoverUserKey := os.Getenv("PUSHOVER_USER_KEY")
-	if pushoverUserKey == "" {
-		fmt.Println("The PUSHOVER_USER_KEY environment variable is empty!")
-		os.Exit(1)
-	}
-
-	notify(pushoverToken, pushoverUserKey, content.String())
+	notify(pushoverToken, pushoverUserKey, "Xûr's in town!", content.String())
 }
