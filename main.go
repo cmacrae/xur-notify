@@ -57,7 +57,12 @@ func getJSON(u string, key string, t int) []byte {
 		os.Exit(1)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if cErr := resp.Body.Close(); cErr != nil {
+			fmt.Println(cErr)
+			os.Exit(1)
+		}
+	}()
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
