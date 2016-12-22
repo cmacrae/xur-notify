@@ -220,6 +220,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// TODO: This logic should really be a bit more sophisticated...
+	//       Look into using time's 'Before'.
+	// --
+	// Xûr's only here on weekends, so notify the user if they run too early
 	t := time.Now()
 	today := int(t.Weekday())
 	if today < 5 {
@@ -247,8 +251,6 @@ func main() {
 
 	// A buffer to collect generated content
 	var content bytes.Buffer
-
 	content = generateInvTemplate(content, saleItemCategories, apiKey)
-
 	notify(pushoverToken, pushoverUserKey, "Xûr's in town!", content.String())
 }
