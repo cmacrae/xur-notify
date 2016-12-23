@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/cmacrae/xur-notify)](https://goreportcard.com/report/github.com/cmacrae/xur-notify)[![Build Status](https://travis-ci.org/cmacrae/xur-notify.svg?branch=master)](https://travis-ci.org/cmacrae/xur-notify)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cmacrae/xur-notify)](https://goreportcard.com/report/github.com/cmacrae/xur-notify) [![Build Status](https://travis-ci.org/cmacrae/xur-notify.svg?branch=master)](https://travis-ci.org/cmacrae/xur-notify)
 # xur-notify
 Push notifications for Xûr's inventory
 
