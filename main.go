@@ -185,7 +185,7 @@ func generateInvTemplate(b bytes.Buffer, a []map[string]interface{}, k string) b
 		}
 
 		// Just run for dynamic items - no use getting notifications about static stock!
-		if categoryTitle == "Exotic Gear" || categoryTitle == "Weapon Ornaments" {
+		if categoryTitle == "Exotic Gear" {
 			saleItems, siErr := sicQuery.ArrayOfObjects("saleItems")
 			if siErr != nil {
 				fmt.Println(siErr)
