@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/cmacrae/xur-notify)](https://goreportcard.com/report/github.com/cmacrae/xur-notify) [![Build Status](https://travis-ci.org/cmacrae/xur-notify.svg?branch=master)](https://travis-ci.org/cmacrae/xur-notify)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cmacrae/xur-notify)](https://goreportcard.com/report/github.com/cmacrae/xur-notify) [![Build Status](https://travis-ci.org/cmacrae/xur-notify.svg?branch=master)](https://travis-ci.org/cmacrae/xur-notify) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](LICENSE)
 # xur-notify
 Push notifications for Xûr's inventory
 
@@ -21,15 +21,22 @@ Lockscreen                 |  Pushover
 ![](http://i.imgur.com/j1YJwSN.png)  |  ![](http://i.imgur.com/l6dbZq4.png)
 
 ## Usage
-In this current implementation, `xur-notify` requires the following environment variables:  
-- `BNET_API_KEY` - the following value should be used: `48cfb02afcac408aaa49586aba482cf9`
-- `PUSHOVER_TOKEN` - the following value should be used: `ab7wkogn9xqixemty1iei8jdb7uebw`
-- `PUSHOVER_USER_KEY` - use your user token, from [pushover.net](https://pushover.net)
+To receive notifications from `xur-notify` at 10:00AM UTC every Friday, simply [subscribe with Pushover here](https://pushover.net/subscribe/Xr-mwxq4o1v35qs8er)!
+_Warning: This is an experimental implementation - due to potential influx in users, please bear with me in this initial release. I'm personally hosting the infrastructure triggering the notifications, so there may be some unforeseen problems in early usage_
 
-### Docker
+### Running your own instance xur-notify
+I have Open Source software and the brilliant community behind it to thank for so much in my life, I'd like to stay true to my roots.  
+So, if you'd rather just run your own `xur-notify`, feel free!  
+
+In this current implementation, `xur-notify` requires the following environment variables:  
+- `BNET_API_KEY` - can be obtained from [bungie.net](https://www.bungie.net/en/Application)
+- `PUSHOVER_TOKEN` - use your own application token, from [pushover.net](https://pushover.net)
+- `PUSHOVER_RECIPIENT_KEY` - use your user/group token, from [pushover.net](https://pushover.net)
+
+#### Docker
 A [Docker image (`cmacrae/xur-notify`)](https://hub.docker.com/r/cmacrae/xur-notify/) is available, and should be run like so:
 ``` bash
-docker run --name xur-notify -d -e PUSHOVER_TOKEN=$PUSHOVER_TOKEN -e PUSHOVER_USER_KEY=$PUSHOVER_USER_KEY -e BNET_API_KEY=$BNET_API_KEY cmacrae/xur-notify:1.0.0-alpha
+docker run --name xur-notify -d -e PUSHOVER_TOKEN=$PUSHOVER_TOKEN -e PUSHOVER_RECIPIENT_KEY=$PUSHOVER_RECIPIENT_KEY -e BNET_API_KEY=$BNET_API_KEY cmacrae/xur-notify:1.0.0-alpha
 ```
 _Note: the relevant environment variables would need to be set in order for this to work_
 
@@ -39,13 +46,15 @@ If you'd like to alter this to suit your schedule, you can build your own Docker
 RUN echo -e "0\t10\t*\t*\t5\t/bin/xur-notify &> /dev/stdout" > /etc/crontabs/root
 ```
 
-### Binary
+#### Binary
 Or, simply head over to [the releases page](https://github.com/cmacrae/xur-notify/releases) and grab the latest binary for your platform, set your environment variables, and run it!  
 You'll probably want to have this execute on a schedule, so you get seemless notifications when Xûr arrives.
 
-## Future implementations (less hands-on)
-This is the first program I've written.  
-Right now, it does a great job at doing what I set out to do, but leaves some desire in its means of deployment for end users.  
-I plan to make this more consumer friendly as the project evolves, hoping to make it easy for fellow Guardians to get the info they want, easily.  
+## Licensing
+See the [LICENSE](LICENSE) file
 
-So, hang tight, if you're not so comfortable with all the above!
+## Credit
+- @gregdel: [for making Pushover integration so slick](https://github.com/gregdel/pushover)
+- @jmoiron: [for easing handling of json structures](https://github.com/jmoiron/jsonq)
+- The awesome people at [superblock](https://superblock.net/contact/) for [Pushover](https://pushover.net)!
+- [Allyn H](http://allynh.com/blog/) for his series of blog posts that inspired me to write `xur-notify`
