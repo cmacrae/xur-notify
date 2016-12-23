@@ -1,0 +1,12 @@
+language: go
+go:
+- 1.8
+
+install:
+- go get -u github.com/gregdel/pushover
+- go get -u github.com/jmoiron/jsonq
+- go get -u github.com/alecthomas/gometalinter
+- $HOME/gopath/bin/gometalinter --install
+
+script:
+- gometalinter --deadline 10s && go build -v && go test -v && go vet
