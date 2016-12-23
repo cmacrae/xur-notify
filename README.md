@@ -21,7 +21,8 @@ Lockscreen                 |  Pushover
 ![](http://i.imgur.com/j1YJwSN.png)  |  ![](http://i.imgur.com/l6dbZq4.png)
 
 ## Usage
-To receive notifications from `xur-notify` at 10:00AM UTC every Friday, simply [subscribe with Pushover here](https://pushover.net/subscribe/Xr-mwxq4o1v35qs8er)!
+[**Subscribe via Pushover**](https://pushover.net/subscribe/Xr-mwxq4o1v35qs8er) to receive notifications from `xur-notify` at 10:00AM UTC every Friday!  
+
 _Warning: This is an experimental implementation - due to potential influx in users, please bear with me in this initial release. I'm personally hosting the infrastructure triggering the notifications, so there may be some unforeseen problems in early usage_
 
 ### Running your own instance xur-notify
