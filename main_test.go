@@ -55,9 +55,9 @@ func TestLookup(t *testing.T) {
 		fmt.Println("The TEST_PUSHOVER_TOKEN environment variable is empty!")
 		os.Exit(1)
 	}
-	testPushoverUserKey := os.Getenv("TEST_PUSHOVER_USER_KEY")
+	testPushoverUserKey := os.Getenv("TEST_PUSHOVER_RECIPIENT_KEY")
 	if testPushoverUserKey == "" {
-		fmt.Println("The TEST_PUSHOVER_USER_KEY environment variable is empty!")
+		fmt.Println("The TEST_PUSHOVER_RECIPIENT_KEY environment variable is empty!")
 		os.Exit(1)
 	}
 

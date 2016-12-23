@@ -99,9 +99,9 @@ func exposeJSON(url string, key string) map[string]interface{} {
 	return data
 }
 
-// notify sends a push notification using Pushover, using the given application & user token, with
+// notify sends a push notification using Pushover, using the given application & user/recipient token, with
 // the value of the 1st given string as the message title, and the 2nd as the body.
-func notify(t string, u string, h string, m string) {
+func notify(t string, r string, h string, m string) {
 	message := &pushover.Message{
 		Title:     h,
 		Message:   m,
@@ -109,7 +109,7 @@ func notify(t string, u string, h string, m string) {
 		HTML:      true,
 	}
 	app := pushover.New(t)
-	recipient := pushover.NewRecipient(u)
+	recipient := pushover.NewRecipient(r)
 	response, err := app.SendMessage(message, recipient)
 	if err != nil {
 		fmt.Println(err)
@@ -216,9 +216,9 @@ func main() {
 		fmt.Println("The PUSHOVER_TOKEN environment variable is empty!")
 		os.Exit(1)
 	}
-	pushoverUserKey := os.Getenv("PUSHOVER_USER_KEY")
-	if pushoverUserKey == "" {
-		fmt.Println("The PUSHOVER_USER_KEY environment variable is empty!")
+	pushoverRecipientKey := os.Getenv("PUSHOVER_RECIPIENT_KEY")
+	if pushoverRecipientKey == "" {
+		fmt.Println("The PUSHOVER_RECIPIENT_KEY environment variable is empty!")
 		os.Exit(1)
 	}
 
@@ -229,7 +229,7 @@ func main() {
 	t := time.Now()
 	today := int(t.Weekday())
 	if today < 5 {
-		notify(pushoverToken, pushoverUserKey, "Xûr ain't here yet!", "Check your scheduling")
+		notify(pushoverToken, pushoverRecipientKey, "Xûr ain't here yet!", "Check your scheduling")
 		os.Exit(3)
 	}
 
@@ -254,5 +254,5 @@ func main() {
 	// A buffer to collect generated content
 	var content bytes.Buffer
 	content = generateInvTemplate(content, saleItemCategories, apiKey)
-	notify(pushoverToken, pushoverUserKey, "Xûr's in town!", content.String())
+	notify(pushoverToken, pushoverRecipientKey, "Xûr's in town!", content.String())
 }
