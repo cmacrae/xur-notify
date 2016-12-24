@@ -25,7 +25,7 @@ Lockscreen                 |  Pushover
 
 _Warning: This is an experimental implementation - due to potential influx in users, please bear with me in this initial release. I'm personally hosting the infrastructure triggering the notifications, so there may be some unforeseen problems in early usage_
 
-### Running your own instance xur-notify
+### Running your own instance of xur-notify
 I have Open Source software and the brilliant community behind it to thank for so much in my life, I'd like to stay true to my roots.  
 So, if you'd rather just run your own `xur-notify`, feel free!  
 
