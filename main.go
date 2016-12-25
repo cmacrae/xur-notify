@@ -240,7 +240,6 @@ func main() {
 	}
 
 	// Open a new JSON query on the data returned from Xûr's 'Advisors' endpoint
-	// FROM BNET
 	xurURL := bnetBaseURL + "Advisors/Xur/"
 	data := exposeJSON(xurURL, apiKey)
 	jq := jsonq.NewQuery(data)
