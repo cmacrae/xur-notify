@@ -1,4 +1,4 @@
-// Copyright 2016 Calum MacRae. All rights reserved.
+// Copyright 2017 Calum MacRae. All rights reserved.
 // Use of this source code is governed by an MIT license
 // that can be found in the LICENSE file.
 
