@@ -33,6 +33,7 @@ In this current implementation, `xur-notify` requires the following environment 
 - `BNET_API_KEY` - can be obtained from [bungie.net](https://www.bungie.net/en/Application)
 - `PUSHOVER_TOKEN` - use your own application token, from [pushover.net](https://pushover.net)
 - `PUSHOVER_RECIPIENT_KEY` - use your user/group token, from [pushover.net](https://pushover.net)
+- `TIMEZONE` - specify your timezone, defaults to `Europe/London` if unset (use tz database zone format)
 
 #### Docker
 A [Docker image (`cmacrae/xur-notify`)](https://hub.docker.com/r/cmacrae/xur-notify/) is available, and should be run like so:
